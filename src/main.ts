@@ -4,10 +4,13 @@ import { IonicRouteStrategy, provideIonicAngular } from '@ionic/angular/standalo
 
 import { routes } from './app/app.routes';
 import { AppComponent } from './app/app.component';
+import { PlantRepository } from './app/features/plants/infrastructure/repositories/plant.repository';
+import { LocalStoragePlantRepository } from './app/features/plants/infrastructure/repositories/local-storage-plant.repository';
 
 bootstrapApplication(AppComponent, {
   providers: [
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
+    { provide: PlantRepository, useClass: LocalStoragePlantRepository },
     provideIonicAngular(),
     provideRouter(routes, withPreloading(PreloadAllModules)),
   ],

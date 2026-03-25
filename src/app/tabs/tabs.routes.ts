@@ -8,8 +8,8 @@ export const routes: Routes = [
     children: [
       {
         path: 'tab1',
-        loadComponent: () =>
-          import('../tab1/tab1.page').then((m) => m.Tab1Page),
+        loadChildren: () =>
+          import('../features/plants/plants.routes').then((m) => m.routes),
       },
       {
         path: 'tab2',
