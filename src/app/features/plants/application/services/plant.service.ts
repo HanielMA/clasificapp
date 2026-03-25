@@ -25,7 +25,7 @@ export class PlantService {
     return this.plantRepository.getById(id);
   }
 
-  async filterPlants(filters: { name?: string; startDate?: number; endDate?: number }): Promise<Plant[]> {
+  async filterPlants(filters: { name?: string; startDate?: number; endDate?: number; category?: string }): Promise<Plant[]> {
     let plants = await this.getPlants();
 
     if (filters.name) {
@@ -42,6 +42,10 @@ export class PlantService {
 
     if (filters.endDate) {
       plants = plants.filter(p => p.fechaRegistro <= filters.endDate!);
+    }
+
+    if (filters.category) {
+      plants = plants.filter(p => p.categoria === filters.category);
     }
 
     return plants;
