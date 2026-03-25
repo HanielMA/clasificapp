@@ -64,9 +64,10 @@ import { saveOutline, cameraOutline, closeCircleOutline } from 'ionicons/icons';
         </ion-list>
 
         <div class="ion-padding-horizontal ion-padding-bottom">
-          <ion-button expand="block" fill="outline" color="medium" (click)="addMockPhoto()" type="button" class="photo-btn">
+          <input type="file" accept="image/*" multiple #fileInput style="display: none;" (change)="onFileSelected($event)">
+          <ion-button expand="block" fill="outline" color="medium" (click)="fileInput.click()" type="button" class="photo-btn">
             <ion-icon slot="start" name="camera-outline"></ion-icon>
-            Añadir Foto (Simulada)
+            Añadir Foto(s)
           </ion-button>
           
           <div *ngIf="fotos.length > 0" class="photo-grid">
@@ -117,9 +118,19 @@ export class PlantFormComponent {
     });
   }
 
-  addMockPhoto() {
-    const randomId = Math.floor(Math.random() * 1000);
-    this.fotos.push(`https://picsum.photos/seed/${randomId}/400`);
+  onFileSelected(event: any) {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const reader = new FileReader();
+        reader.onload = (e: any) => {
+          this.fotos.push(e.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+    event.target.value = ''; // Reset input to allow selecting same file again
   }
 
   removePhoto(index: number) {
