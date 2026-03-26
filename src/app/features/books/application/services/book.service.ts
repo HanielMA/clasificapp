@@ -1,23 +1,31 @@
 import { Injectable } from '@angular/core';
 import { BookRepository } from '../../infrastructure/repositories/book.repository';
-import { GoogleBooksGateway } from '../../infrastructure/external/google-books.gateway';
+import { OpenLibraryGateway } from '../../infrastructure/external/open-library.gateway';
+import { BookGateway } from '../../domain/ports/book-gateway.port';
 import { Book } from '../../domain/models/book.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class BookService {
+
+  private readonly bookGateway: BookGateway;
+
   constructor(
     private bookRepository: BookRepository,
-    private googleBooksGateway: GoogleBooksGateway
-  ) {}
+    openLibraryGateway: OpenLibraryGateway
+  ) {
+    // Se inyecta la implementación concreta pero se almacena como el puerto abstracto.
+    // En el futuro basta con cambiar esta línea (o usar un token DI) para reemplazar el proveedor.
+    this.bookGateway = openLibraryGateway;
+  }
 
   async fetchBookDataFromIsbn(isbn: string): Promise<Partial<Book>> {
     const rawIsbn = isbn.replace(/-/g, '').trim();
     if (!rawIsbn) {
       throw new Error('El ISBN provisto no es válido.');
     }
-    return this.googleBooksGateway.searchByIsbn(rawIsbn);
+    return this.bookGateway.searchByIsbn(rawIsbn);
   }
 
   async saveBook(bookData: Omit<Book, 'id'>): Promise<Book> {

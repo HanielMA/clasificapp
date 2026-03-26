@@ -1,4 +1,5 @@
 export const environment = {
   production: true,
-  googleBooksApiKey: 'AIzaSyA9B7Ewg_B2X1ryyzN_1f0DfIPPQggVsQ0'
+  openLibraryApiUrl: 'https://openlibrary.org',
+  openLibraryCoversUrl: 'https://covers.openlibrary.org/b/isbn'
 };
