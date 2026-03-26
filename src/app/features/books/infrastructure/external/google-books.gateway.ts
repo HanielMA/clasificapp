@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Book } from '../../domain/models/book.model';
+import { environment } from '../../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -9,8 +10,8 @@ export class GoogleBooksGateway {
 
   async searchByIsbn(isbn: string): Promise<Partial<Book>> {
     try {
-      const apiKey = 'AIzaSyDdAP1ZXONWfvWaz4g6Dqrgwnmuh63mkpk';
-const response = await fetch(`${this.API_URL}?q=isbn:${isbn}&key=${apiKey}`);
+      const apiKey = environment.googleBooksApiKey;
+      const response = await fetch(`${this.API_URL}?q=isbn:${isbn}&key=${apiKey}`);
       
       if (!response.ok) {
         throw new Error('Fallo de red al consultar Google Books. Verifica tu conexión.');

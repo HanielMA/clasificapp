@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Exponer App en Red Local (Wi-Fi)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npx ng serve --host=0.0.0.0",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Exponer App en Internet (Alternativa Ngrok)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npx ngrok http 4200",
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}
