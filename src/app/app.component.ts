@@ -14,7 +14,8 @@ import { leafOutline, leafSharp, bookOutline, bookSharp } from 'ionicons/icons';
 })
 export class AppComponent {
   public appPages = [
-    { title: 'Mis Plantas', url: '/plants', icon: 'leaf' }
+    { title: 'Mis Plantas', url: '/plants', icon: 'leaf' },
+    { title: 'Mis Libros', url: '/books', icon: 'book' }
   ];
 
   constructor() {

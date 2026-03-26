@@ -3,14 +3,15 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PlantService } from '../../../application/services/plant.service';
-import { IonHeader, IonToolbar, IonTitle, IonContent, IonItem, IonLabel, IonInput, IonButton, IonButtons, IonBackButton, IonIcon, IonList, IonNote, IonSelect, IonSelectOption, IonText } from '@ionic/angular/standalone';
+import { IonHeader, IonToolbar, IonTitle, IonContent, IonItem, IonLabel, IonInput, IonButton, IonButtons, IonBackButton, IonIcon, IonList, IonNote, IonSelect, IonSelectOption, IonText, IonModal } from '@ionic/angular/standalone';
+import { MapPickerComponent } from '../../../../../shared/components/map-picker/map-picker.component';
 import { addIcons } from 'ionicons';
-import { saveOutline, cameraOutline, closeCircleOutline } from 'ionicons/icons';
+import { saveOutline, cameraOutline, closeCircleOutline, mapOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-plant-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonItem, IonLabel, IonInput, IonButton, IonButtons, IonBackButton, IonIcon, IonList, IonNote, IonSelect, IonSelectOption, IonText],
+  imports: [CommonModule, ReactiveFormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonItem, IonLabel, IonInput, IonButton, IonButtons, IonBackButton, IonIcon, IonList, IonNote, IonSelect, IonSelectOption, IonText, IonModal, MapPickerComponent],
   template: `
     <ion-header [translucent]="true">
       <ion-toolbar color="success">
@@ -53,13 +54,15 @@ import { saveOutline, cameraOutline, closeCircleOutline } from 'ionicons/icons';
           </ion-item>
 
           <ion-item>
-            <ion-label position="stacked">Latitud</ion-label>
-            <ion-input type="number" formControlName="latitud" placeholder="Opcional"></ion-input>
-          </ion-item>
-          
-          <ion-item>
-            <ion-label position="stacked">Longitud</ion-label>
-            <ion-input type="number" formControlName="longitud" placeholder="Opcional"></ion-input>
+            <ion-label position="stacked">Latitud y Longitud</ion-label>
+            <div class="location-box">
+              <span *ngIf="plantForm.get('latitud')?.value" class="coords">{{ plantForm.get('latitud')?.value | number:'1.4-4' }}, {{ plantForm.get('longitud')?.value | number:'1.4-4' }}</span>
+              <span *ngIf="!plantForm.get('latitud')?.value" class="placeholder-text">Ninguna ubicación fijada</span>
+              <ion-button size="small" fill="outline" color="success" (click)="openMapModal()" style="margin-left:auto;">
+                <ion-icon slot="start" name="map-outline"></ion-icon>
+                Fijar / Ver
+              </ion-button>
+            </div>
           </ion-item>
         </ion-list>
 
@@ -85,6 +88,28 @@ import { saveOutline, cameraOutline, closeCircleOutline } from 'ionicons/icons';
           </ion-button>
         </div>
       </form>
+
+      <!-- Map Modal -->
+      <ion-modal [isOpen]="isMapModalOpen" (didDismiss)="closeMapModal()">
+        <ng-template>
+          <ion-header>
+            <ion-toolbar color="dark">
+              <ion-buttons slot="end">
+                <ion-button (click)="closeMapModal()">Cancelar</ion-button>
+              </ion-buttons>
+              <ion-title>Fijar Ubicación</ion-title>
+            </ion-toolbar>
+          </ion-header>
+          <ion-content>
+            <app-map-picker 
+              [initialLat]="plantForm.get('latitud')?.value || undefined"
+              [initialLng]="plantForm.get('longitud')?.value || undefined"
+              (locationSelected)="onLocationSelected($event)">
+            </app-map-picker>
+          </ion-content>
+        </ng-template>
+      </ion-modal>
+
     </ion-content>
   `,
   styles: [`
@@ -96,18 +121,22 @@ import { saveOutline, cameraOutline, closeCircleOutline } from 'ionicons/icons';
     .photo-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     .photo-item ion-icon { position: absolute; top: -8px; right: -8px; font-size: 24px; background: white; border-radius: 50%; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     .submit-btn { margin-top: 10px; height: 50px; font-weight: 600; }
+    .location-box { display: flex; align-items: center; width: 100%; margin-top: 8px; margin-bottom: 8px; min-height: 40px; }
+    .coords { font-weight: 600; font-size: 0.9em; color: var(--ion-color-dark); }
+    .placeholder-text { color: #888; font-size: 0.9em; font-style: italic; }
   `]
 })
 export class PlantFormComponent {
   plantForm: FormGroup;
   fotos: string[] = [];
+  isMapModalOpen = false;
 
   constructor(
     private fb: FormBuilder,
     private plantService: PlantService,
     private router: Router
   ) {
-    addIcons({ saveOutline, cameraOutline, closeCircleOutline });
+    addIcons({ saveOutline, cameraOutline, closeCircleOutline, mapOutline });
     this.plantForm = this.fb.group({
       nombre: ['', Validators.required],
       nombreCientifico: ['', Validators.required],
@@ -149,5 +178,21 @@ export class PlantFormComponent {
         console.error('Error creando planta:', error);
       }
     }
+  }
+
+  openMapModal() {
+    this.isMapModalOpen = true;
+  }
+
+  closeMapModal() {
+    this.isMapModalOpen = false;
+  }
+
+  onLocationSelected(coords: {lat: number, lng: number}) {
+    this.plantForm.patchValue({
+      latitud: coords.lat,
+      longitud: coords.lng
+    });
+    this.closeMapModal();
   }
 }

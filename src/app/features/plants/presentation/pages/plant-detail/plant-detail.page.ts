@@ -3,14 +3,15 @@ import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton, IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent, IonIcon, IonItem, IonLabel, IonList, IonSpinner, IonChip } from '@ionic/angular/standalone';
 import { PlantService } from '../../../application/services/plant.service';
+import { MapViewerComponent } from '../../../../../shared/components/map-viewer/map-viewer.component';
 import { Plant } from '../../../domain/models/plant.model';
 import { addIcons } from 'ionicons';
-import { leafOutline, locationOutline, calendarOutline, listOutline, imageOutline } from 'ionicons/icons';
+import { leafOutline, locationOutline, calendarOutline, listOutline, imageOutline, mapOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-plant-detail',
   standalone: true,
-  imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton, IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent, IonIcon, IonItem, IonLabel, IonList, IonSpinner, IonChip],
+  imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton, IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent, IonIcon, IonItem, IonLabel, IonList, IonSpinner, IonChip, MapViewerComponent],
   providers: [DatePipe, DecimalPipe],
   template: `
     <ion-header [translucent]="true">
@@ -66,13 +67,15 @@ import { leafOutline, locationOutline, calendarOutline, listOutline, imageOutlin
                 </ion-label>
               </ion-item>
               
-              <ion-item *ngIf="plant.latitud && plant.longitud">
-                <ion-icon name="location-outline" slot="start" color="danger"></ion-icon>
-                <ion-label>
-                  <h3 class="label-title">Coordenadas de Origen</h3>
-                  <p class="label-value">{{ plant.latitud | number:'1.4-4' }}, {{ plant.longitud | number:'1.4-4' }}</p>
-                </ion-label>
-              </ion-item>
+              <div class="map-box" *ngIf="plant.latitud && plant.longitud">
+                 <div class="map-header">
+                   <ion-icon name="map-outline" color="danger" size="large"></ion-icon>
+                   <span>Ubicación de Origen</span>
+                 </div>
+                 <div style="width: 100%; height: 200px; margin-top: 8px;">
+                   <app-map-viewer [lat]="plant.latitud" [lng]="plant.longitud" [popupText]="plant.nombre"></app-map-viewer>
+                 </div>
+              </div>
               
               <ion-item>
                 <ion-icon name="calendar-outline" slot="start" color="medium"></ion-icon>
@@ -101,6 +104,8 @@ import { leafOutline, locationOutline, calendarOutline, listOutline, imageOutlin
     .label-title { font-weight: 600; color: var(--ion-color-dark); margin-bottom: 4px; font-size: 1.05em; }
     .label-value { font-size: 1em; color: #555; }
     ion-card-title { font-size: 1.6em; font-weight: bold; }
+    .map-box { padding: 16px; background: #fff; border-bottom: 1px solid var(--ion-color-light-shade); margin: 0; }
+    .map-header { display: flex; align-items: center; gap: 8px; font-weight: 700; color: #444; margin-bottom: 12px; text-transform: uppercase; font-size: 0.9em; }
   `]
 })
 export class PlantDetailPage implements OnInit {
@@ -111,7 +116,7 @@ export class PlantDetailPage implements OnInit {
     private route: ActivatedRoute,
     private plantService: PlantService
   ) {
-    addIcons({ leafOutline, locationOutline, calendarOutline, listOutline, imageOutline });
+    addIcons({ leafOutline, locationOutline, calendarOutline, listOutline, imageOutline, mapOutline });
   }
 
   async ngOnInit() {

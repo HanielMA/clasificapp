@@ -1,19 +1,20 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonHeader, IonToolbar, IonTitle, IonContent, IonSearchbar, IonFab, IonFabButton, IonIcon, IonList, IonItem, IonLabel, IonButton, IonDatetime, IonModal, IonButtons, ModalController, IonMenuButton, IonChip } from '@ionic/angular/standalone';
+import { IonHeader, IonToolbar, IonTitle, IonContent, IonSearchbar, IonFab, IonFabButton, IonIcon, IonList, IonItem, IonLabel, IonButton, IonDatetime, IonModal, IonButtons, ModalController, IonMenuButton, IonChip, ActionSheetController, ToastController } from '@ionic/angular/standalone';
 import { PlantService } from '../../../application/services/plant.service';
+import { PlantBackupService } from '../../../application/services/plant-backup.service';
 import { Plant } from '../../../domain/models/plant.model';
 import { PlantCardComponent } from '../../components/plant-card/plant-card.component';
 import { addIcons } from 'ionicons';
-import { add, filter, optionsOutline, closeCircle, leafOutline } from 'ionicons/icons';
+import { add, filter, optionsOutline, closeCircle, leafOutline, ellipsisVertical, cloudDownloadOutline, cloudUploadOutline, documentOutline, documentTextOutline } from 'ionicons/icons';
 import { RouterModule, Router } from '@angular/router';
 
 @Component({
   selector: 'app-plants-home',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule, IonHeader, IonToolbar, IonTitle, IonContent, IonSearchbar, IonFab, IonFabButton, IonIcon, IonList, PlantCardComponent, IonButton, IonDatetime, IonModal, IonButtons, IonMenuButton, IonChip, IonLabel],
-  providers: [ModalController],
+  providers: [ModalController, ActionSheetController, ToastController],
   template: `
     <ion-header [translucent]="true">
       <ion-toolbar color="success">
@@ -21,6 +22,11 @@ import { RouterModule, Router } from '@angular/router';
           <ion-menu-button></ion-menu-button>
         </ion-buttons>
         <ion-title>Mis Plantas</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="presentBackupActions()">
+            <ion-icon slot="icon-only" name="ellipsis-vertical"></ion-icon>
+          </ion-button>
+        </ion-buttons>
       </ion-toolbar>
 
       <ion-toolbar color="success" class="search-toolbar">
@@ -103,6 +109,9 @@ import { RouterModule, Router } from '@angular/router';
           </ion-content>
         </ng-template>
       </ion-modal>
+
+      <!-- Input invisible para importar CSV -->
+      <input type="file" #fileInput accept=".csv" style="display: none;" (change)="onFileSelected($event)">
     </ion-content>
   `,
   styles: [`
@@ -128,8 +137,14 @@ export class PlantsHomePage implements OnInit {
   tempDate?: number;
   tempDateString?: string;
 
-  constructor(private plantService: PlantService, private router: Router) {
-    addIcons({ add, filter, optionsOutline, closeCircle, leafOutline });
+  constructor(
+    private plantService: PlantService, 
+    private plantBackupService: PlantBackupService,
+    private actionSheetCtrl: ActionSheetController,
+    private toastCtrl: ToastController,
+    private router: Router
+  ) {
+    addIcons({ add, filter, optionsOutline, closeCircle, leafOutline, ellipsisVertical, cloudDownloadOutline, cloudUploadOutline, documentOutline, documentTextOutline });
   }
 
   async ngOnInit() {
@@ -196,5 +211,86 @@ export class PlantsHomePage implements OnInit {
 
   goToDetail(id: string) {
     this.router.navigate(['/plants', id]);
+  }
+
+  async presentBackupActions() {
+    const actionSheet = await this.actionSheetCtrl.create({
+      header: 'Copias de Seguridad',
+      buttons: [
+        {
+          text: 'Exportar a CSV',
+          icon: 'document-text-outline',
+          handler: () => {
+            this.exportCsv();
+          }
+        },
+        {
+          text: 'Exportar a PDF',
+          icon: 'document-outline',
+          handler: () => {
+            this.exportPdf();
+          }
+        },
+        {
+          text: 'Importar desde CSV',
+          icon: 'cloud-upload-outline',
+          handler: () => {
+            // Trigger file input click
+            document.querySelector<HTMLInputElement>('input[type="file"]')?.click();
+          }
+        },
+        {
+          text: 'Cancelar',
+          icon: 'close',
+          role: 'cancel'
+        }
+      ]
+    });
+
+    await actionSheet.present();
+  }
+
+  async exportCsv() {
+    try {
+      await this.plantBackupService.exportToCsv();
+      this.showToast('Exportación CSV completada con éxito', 'success');
+    } catch (error: any) {
+      this.showToast(error.message, 'danger');
+    }
+  }
+
+  async exportPdf() {
+    try {
+      await this.plantBackupService.exportToPdf();
+      this.showToast('Exportación PDF completada con éxito', 'success');
+    } catch (error: any) {
+      this.showToast(error.message, 'danger');
+    }
+  }
+
+  async onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Reset file input so we can trigger the same file again if needed
+    event.target.value = '';
+
+    try {
+      const count = await this.plantBackupService.importFromCsv(file);
+      this.showToast(`Importación completada: ${count} plantas añadidas`, 'success');
+      await this.loadPlants();
+    } catch (error: any) {
+      this.showToast(error.message, 'danger');
+    }
+  }
+
+  private async showToast(message: string, color: 'success' | 'danger') {
+    const toast = await this.toastCtrl.create({
+      message,
+      duration: 3000,
+      color,
+      position: 'bottom'
+    });
+    toast.present();
   }
 }
